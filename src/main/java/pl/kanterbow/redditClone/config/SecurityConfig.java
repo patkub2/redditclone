@@ -1,21 +1,42 @@
 package pl.kanterbow.redditClone.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
+import org.springframework.security.config.annotation.web.configurers.ExpressionUrlAuthorizationConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 
 @EnableWebSecurity
+@Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
     @Bean
-    public AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity.cors().and().csrf().disable().authorizeHttpRequests().requestMatchers("/api/auth/**").permitAll().anyRequest().authenticated();
-
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
-@Bean
-    PasswordEncoder passwordEncoder(){
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+        return httpSecurity.cors().and()
+                .csrf().disable()
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/auth/**")
+                        .permitAll()
+                        .anyRequest()
+                        .authenticated())
+             .build();
+    }
+
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-}
+    }
 }
